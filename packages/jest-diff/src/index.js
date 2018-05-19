@@ -52,36 +52,38 @@ const MULTILINE_REGEXP = /[\r\n]/;
 // Generate a string that will highlight the difference between two values
 // with green and red (similar to how github does code diffing).
 //
-// Returns null when expected and received are simple types and a diff would
-// only add unnecessary noise to the matcher error message (e.g. a='foo', b='bar').
-function diff(a: any, b: any, options: ?DiffOptions): ?string {
-  if (a === b) {
+// Returns null when expected and received are small and a diff would
+// only add unnecessary noise to the matcher error message (e.g. expected='foo', received='bar').
+function diff(expected: any, received: any, options: ?DiffOptions): ?string {
+  if (expected === received) {
     return NO_DIFF_MESSAGE;
   }
 
-  const aType = getType(a);
-  let expectedType = aType;
+  let expectedType = getType(expected);
   let omitDifference = false;
-  if (aType === 'object' && typeof a.asymmetricMatch === 'function') {
-    if (a.$$typeof !== Symbol.for('jest.asymmetricMatcher')) {
+  if (
+    expectedType === 'object' &&
+    typeof expected.asymmetricMatch === 'function'
+  ) {
+    if (expected.$$typeof !== Symbol.for('jest.asymmetricMatcher')) {
       // Do not know expected type of user-defined asymmetric matcher.
       return null;
     }
-    if (typeof a.getExpectedType !== 'function') {
+    if (typeof expected.getExpectedType !== 'function') {
       // For example, expect.anything() matches either null or undefined
       return null;
     }
-    expectedType = a.getExpectedType();
+    expectedType = expected.getExpectedType();
     // Primitive types boolean and number omit difference below.
     // For example, omit difference for expect.stringMatching(regexp)
     omitDifference = expectedType === 'string';
   }
 
-  if (expectedType !== getType(b)) {
+  if (expectedType !== getType(received)) {
     return (
       '  Comparing two different types of values.' +
       ` Expected ${chalk.green(expectedType)} but ` +
-      `received ${chalk.red(getType(b))}.`
+      `received ${chalk.red(getType(received))}.`
     );
   }
 
@@ -89,22 +91,23 @@ function diff(a: any, b: any, options: ?DiffOptions): ?string {
     return null;
   }
 
-  switch (aType) {
+  switch (expectedType) {
     case 'string':
-      const multiline = MULTILINE_REGEXP.test(a) && b.indexOf('\n') !== -1;
+      const multiline =
+        MULTILINE_REGEXP.test(expected) && received.indexOf('\n') !== -1;
       if (multiline) {
-        return diffStrings(a, b, options);
+        return diffStrings(expected, received, options);
       }
       return null;
     case 'number':
     case 'boolean':
       return null;
     case 'map':
-      return compareObjects(sortMap(a), sortMap(b), options);
+      return compareObjects(sortMap(expected), sortMap(received), options);
     case 'set':
-      return compareObjects(sortSet(a), sortSet(b), options);
+      return compareObjects(sortSet(expected), sortSet(received), options);
     default:
-      return compareObjects(a, b, options);
+      return compareObjects(expected, received, options);
   }
 }
 
