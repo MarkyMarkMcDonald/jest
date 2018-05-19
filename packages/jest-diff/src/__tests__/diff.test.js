@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {AsymmetricMatcher} from "../../../expect/src/asymmetric_matchers";
+
 const stripAnsi = require('strip-ansi');
 const diff = require('../');
 
@@ -99,7 +101,70 @@ describe('simple diffs rely on the matcher message by returning null', () => {
   test('booleans', () => {
     expect(diff(true, false)).toBe(null);
   });
+
+  describe('asymmetric matchers also return null', () => {
+    test('oneline strings', () => {
+      expect(diff(expect.stringMatching(/a/), 'b')).toBe(null);
+    });
+
+    test('numbers', () => {
+      expect(diff(new GreaterThan(5), 5)).toBe(null);
+    });
+
+    test('booleans', () => {
+      expect(diff(new ToBeTrue(), false)).toBe(null);
+    });
+  });
 });
+
+class ToBeTrue extends AsymmetricMatcher {
+  constructor() {
+    super();
+  }
+
+  asymmetricMatch(other) {
+    return other === true;
+  }
+
+  toString() {
+    return 'ToBeTrue';
+  }
+
+  getExpectedType() {
+    return 'boolean';
+  }
+
+  toAsymmetricMatcher() {
+    // to be printed in diff string.
+    return `ToBeTrue`;
+  }
+}
+
+class GreaterThan extends AsymmetricMatcher {
+  expected: number;
+
+  constructor(expected) {
+    super();
+    this.expected = expected;
+  }
+
+  asymmetricMatch(other) {
+    return other > this.expected;
+  }
+
+  toString() {
+    return 'GreaterThan';
+  }
+
+  getExpectedType() {
+    return 'number';
+  }
+
+  toAsymmetricMatcher() {
+    // to be printed in diff string.
+    return `GreaterThan(${this.expected})`;
+  }
+}
 
 describe('falls back to not call toJSON', () => {
   describe('if serialization has no differences', () => {

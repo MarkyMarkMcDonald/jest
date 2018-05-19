@@ -156,9 +156,7 @@ function asymmetricDiff(
     return typeMismatchMessage(expectedType, received);
   }
 
-  // Primitive types boolean and number omit difference below.
-  // For example, omit difference for expect.stringMatching(regexp)
-  if (expectedType === 'string') {
+  if (['string', 'boolean', 'number'].includes(expectedType)) {
     return null;
   }
 
