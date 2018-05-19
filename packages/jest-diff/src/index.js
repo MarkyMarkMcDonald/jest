@@ -50,7 +50,10 @@ const FALLBACK_FORMAT_OPTIONS_0 = Object.assign({}, FALLBACK_FORMAT_OPTIONS, {
 const MULTILINE_REGEXP = /[\r\n]/;
 
 // Generate a string that will highlight the difference between two values
-// with green and red. (similar to how github does code diffing)
+// with green and red (similar to how github does code diffing).
+//
+// Returns null when expected and received are simple types and a diff would
+// only add unnecessary noise to the matcher error message (e.g. a='foo', b='bar').
 function diff(a: any, b: any, options: ?DiffOptions): ?string {
   if (a === b) {
     return NO_DIFF_MESSAGE;
