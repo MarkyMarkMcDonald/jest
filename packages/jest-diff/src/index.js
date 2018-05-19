@@ -146,10 +146,6 @@ function asymmetricDiff(
   received: any,
   options: ?DiffOptions,
 ): ?string {
-  if (expected.$$typeof !== Symbol.for('jest.asymmetricMatcher')) {
-    // Do not know expected type of user-defined asymmetric matcher.
-    return null;
-  }
   if (typeof expected.getExpectedType !== 'function') {
     // For example, expect.anything() matches either null or undefined
     return null;
