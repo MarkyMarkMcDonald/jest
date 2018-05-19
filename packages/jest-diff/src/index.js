@@ -59,12 +59,11 @@ function diff(expected: any, received: any, options: ?DiffOptions): ?string {
     return NO_DIFF_MESSAGE;
   }
 
-  const expectedType = getType(expected);
-
-  if (isAsymmetricMatcher(expectedType, expected)) {
+  if (isAsymmetricMatcher(expected)) {
     return asymmetricDiff(expected, received, options);
   }
 
+  const expectedType = getType(expected);
   if (expectedType !== getType(received)) {
     return typeMismatchMessage(expectedType, received);
   }
@@ -147,7 +146,8 @@ function compareObjects(a: Object, b: Object, options: ?DiffOptions) {
   return diffMessage;
 }
 
-function isAsymmetricMatcher(expectedType, expected) {
+function isAsymmetricMatcher(expected) {
+  const expectedType = getType(expected);
   return (
     expectedType === 'object' && typeof expected.asymmetricMatch === 'function'
   );
