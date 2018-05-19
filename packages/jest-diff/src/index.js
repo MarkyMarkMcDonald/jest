@@ -69,17 +69,13 @@ function diff(expected: any, received: any, options: ?DiffOptions): ?string {
     return typeMismatchMessage(expectedType, received);
   }
 
+  if (isSimpleMismatch(expected, received)) {
+    return null;
+  }
+
   switch (expectedType) {
     case 'string':
-      const multiline =
-        MULTILINE_REGEXP.test(expected) && received.indexOf('\n') !== -1;
-      if (multiline) {
-        return diffStrings(expected, received, options);
-      }
-      return null;
-    case 'number':
-    case 'boolean':
-      return null;
+      return diffStrings(expected, received, options);
     case 'map':
       return compareObjects(sortMap(expected), sortMap(received), options);
     case 'set':
@@ -87,6 +83,22 @@ function diff(expected: any, received: any, options: ?DiffOptions): ?string {
     default:
       return compareObjects(expected, received, options);
   }
+}
+
+function isSimpleMismatch(expected, received): boolean {
+  const expectedType = getType(expected);
+
+  switch (expectedType) {
+    case 'string':
+      const multiline =
+        MULTILINE_REGEXP.test(expected) && received.indexOf('\n') !== -1;
+      return !multiline;
+    case 'number':
+    case 'boolean':
+      return true;
+  }
+
+  return false;
 }
 
 function sortMap(map) {
