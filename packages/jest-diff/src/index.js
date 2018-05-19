@@ -59,36 +59,14 @@ function diff(expected: any, received: any, options: ?DiffOptions): ?string {
     return NO_DIFF_MESSAGE;
   }
 
-  let expectedType = getType(expected);
-  let omitDifference = false;
-  if (
-    expectedType === 'object' &&
-    typeof expected.asymmetricMatch === 'function'
-  ) {
-    if (expected.$$typeof !== Symbol.for('jest.asymmetricMatcher')) {
-      // Do not know expected type of user-defined asymmetric matcher.
-      return null;
-    }
-    if (typeof expected.getExpectedType !== 'function') {
-      // For example, expect.anything() matches either null or undefined
-      return null;
-    }
-    expectedType = expected.getExpectedType();
-    // Primitive types boolean and number omit difference below.
-    // For example, omit difference for expect.stringMatching(regexp)
-    omitDifference = expectedType === 'string';
+  const expectedType = getType(expected);
+
+  if (isAsymmetricMatcher(expectedType, expected)) {
+    return asymmetricDiff(expected, received, options);
   }
 
   if (expectedType !== getType(received)) {
-    return (
-      '  Comparing two different types of values.' +
-      ` Expected ${chalk.green(expectedType)} but ` +
-      `received ${chalk.red(getType(received))}.`
-    );
-  }
-
-  if (omitDifference) {
-    return null;
+    return typeMismatchMessage(expectedType, received);
   }
 
   switch (expectedType) {
@@ -155,6 +133,48 @@ function compareObjects(a: Object, b: Object, options: ?DiffOptions) {
   }
 
   return diffMessage;
+}
+
+function isAsymmetricMatcher(expectedType, expected) {
+  return (
+    expectedType === 'object' && typeof expected.asymmetricMatch === 'function'
+  );
+}
+
+function asymmetricDiff(
+  expected: any,
+  received: any,
+  options: ?DiffOptions,
+): ?string {
+  if (expected.$$typeof !== Symbol.for('jest.asymmetricMatcher')) {
+    // Do not know expected type of user-defined asymmetric matcher.
+    return null;
+  }
+  if (typeof expected.getExpectedType !== 'function') {
+    // For example, expect.anything() matches either null or undefined
+    return null;
+  }
+  const expectedType = expected.getExpectedType();
+
+  if (expectedType !== getType(received)) {
+    return typeMismatchMessage(expectedType, received);
+  }
+
+  // Primitive types boolean and number omit difference below.
+  // For example, omit difference for expect.stringMatching(regexp)
+  if (expectedType === 'string') {
+    return null;
+  }
+
+  return compareObjects(expected, received, options);
+}
+
+function typeMismatchMessage(expectedType, received) {
+  return (
+    '  Comparing two different types of values.' +
+    ` Expected ${chalk.green(expectedType)} but ` +
+    `received ${chalk.red(getType(received))}.`
+  );
 }
 
 module.exports = diff;

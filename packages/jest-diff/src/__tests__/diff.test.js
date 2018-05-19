@@ -26,6 +26,7 @@ describe('different types', () => {
     [[], 2, 'array', 'number'],
     [null, undefined, 'null', 'undefined'],
     [() => {}, 3, 'function', 'number'],
+    [expect.stringMatching(/a/), {}, 'string', 'object'],
   ].forEach(values => {
     const a = values[0];
     const b = values[1];
