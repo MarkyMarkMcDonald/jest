@@ -82,13 +82,23 @@ describe('no visual difference', () => {
   });
 });
 
-test('oneline strings', () => {
-  // oneline strings don't produce a diff currently.
-  expect(diff('ab', 'aa')).toBe(null);
-  expect(diff('123456789', '234567890')).toBe(null);
-  // if either string is oneline
-  expect(diff('oneline', 'multi\nline')).toBe(null);
-  expect(diff('multi\nline', 'oneline')).toBe(null);
+describe('simple diffs rely on the matcher message by returning null', () => {
+  test('oneline strings', () => {
+    // oneline strings don't produce a diff currently.
+    expect(diff('ab', 'aa')).toBe(null);
+    expect(diff('123456789', '234567890')).toBe(null);
+    // if either string is oneline
+    expect(diff('oneline', 'multi\nline')).toBe(null);
+    expect(diff('multi\nline', 'oneline')).toBe(null);
+  });
+
+  test('numbers', () => {
+    expect(diff(123, 234)).toBe(null);
+  });
+
+  test('booleans', () => {
+    expect(diff(true, false)).toBe(null);
+  });
 });
 
 describe('falls back to not call toJSON', () => {
@@ -178,16 +188,6 @@ describe('objects', () => {
   test('(expanded)', () => {
     expect(stripped(a, b, expanded)).toMatch(expected);
   });
-});
-
-test('numbers', () => {
-  const result = diff(123, 234);
-  expect(result).toBe(null);
-});
-
-test('booleans', () => {
-  const result = diff(true, false);
-  expect(result).toBe(null);
 });
 
 describe('multiline string non-snapshot', () => {
